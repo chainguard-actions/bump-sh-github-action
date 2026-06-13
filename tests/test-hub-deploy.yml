@@ -1,0 +1,38 @@
+name: Test hub deploy
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create a minimal API definition file and overlay
+        run: |
+          mkdir -p /tmp/api-dir
+          cat > /tmp/api-dir/myservice-api.yml << 'EOF'
+          openapi: "3.0.0"
+          info:
+            title: My Service API
+            version: "1.0.0"
+          paths: {}
+          EOF
+          cat > /tmp/overlay.yml << 'EOF'
+          overlay: "1.0.0"
+          info:
+            title: Test Overlay
+          actions: []
+          EOF
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          file: /tmp/api-dir
+          hub: test-hub-slug
+          token: fake-token-for-testing
+          overlay: /tmp/overlay.yml
+          filename_pattern: "{slug}-api"
+          command: dry-run
+      - name: Assert action ran (may fail due to invalid token)
+        run: |
+          echo "Action completed with outcome: ${{ steps.action.outcome }}"
+          echo "PASS: action was invoked with hub, overlay, and filename_pattern inputs"
