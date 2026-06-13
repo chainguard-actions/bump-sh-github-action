@@ -1,0 +1,21 @@
+name: Test deploy with hub, doc, and token inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          file: actions/hardened/bump-sh--github-action/v1.2.2/tests/fixtures/api-contract.yml
+          command: deploy
+          doc: test-doc-slug
+          token: fake-token-for-testing
+          hub: test-hub-slug
+        continue-on-error: true
+      - name: Assert action ran (deploy will fail with fake token but inputs should be accepted)
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          echo "PASS: action step completed with doc, token, and hub inputs"

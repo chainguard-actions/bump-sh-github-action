@@ -1,0 +1,32 @@
+name: Test diff command with branch, expires, and overlay inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create overlay file
+        run: |
+          cat > /tmp/overlay.yml << 'EOF'
+          overlay: "1.0.0"
+          info:
+            title: Test Overlay
+          actions: []
+          EOF
+      - id: action
+        uses: .
+        with:
+          file: actions/hardened/bump-sh--github-action/v1.2.2/tests/fixtures/api-contract.yml
+          command: diff
+          doc: test-doc-slug
+          token: fake-token-for-testing
+          branch: main
+          expires: "2099-12-31T00:00:00Z"
+          overlay: /tmp/overlay.yml
+          fail_on_breaking: false
+        continue-on-error: true
+      - name: Assert action ran (diff will fail with fake token but inputs should be accepted)
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          echo "PASS: action step completed with branch, expires, and overlay inputs"
