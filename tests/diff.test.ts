@@ -1,0 +1,146 @@
+import * as github from './fixtures/github.js';
+import * as bump from 'bump-cli';
+import { jest } from '@jest/globals';
+
+// Mocks should be declared before the module being tested is imported.
+jest.unstable_mockModule('@actions/github', () => github);
+
+// The module being tested should be imported dynamically. This ensures that the
+// mocks are used in place of any actual dependencies.
+const { Repo } = await import('../src/github.js');
+const diff = await import('../src/diff.js');
+const originalGhToken = process.env['GITHUB_TOKEN'];
+
+describe('diff.ts', () => {
+  beforeEach(() => {
+    // Mock token env variable
+    process.env['GITHUB_TOKEN'] = 'gh-12abc';
+
+    jest.clearAllMocks();
+
+    // spy and mock Repo#createOrUpdateComment instance function
+    jest
+      .spyOn(Repo.prototype, 'createOrUpdateComment')
+      .mockImplementation(async () => {});
+  });
+
+  afterEach(() => {
+    process.env['GITHUB_TOKEN'] = originalGhToken;
+
+    jest.restoreAllMocks();
+  });
+
+  test('test github diff run process', async () => {
+    const result: bump.DiffResponse = {
+      id: '123abc',
+      markdown: `* one
+* two
+* three
+`,
+      public_url: 'https://bump.sh/doc/my-doc/changes/654',
+      breaking: false,
+    };
+    const digest = '4b81e612cafa6580f8ad3bfe9e970b2d961f58c2';
+
+    const repo = new Repo('hello');
+
+    await diff.run(result, repo);
+
+    expect(repo.createOrUpdateComment).toHaveBeenCalledWith(
+      `🤖 API structural change detected:
+
+* one
+* two
+* three
+
+
+[Preview documentation](https://bump.sh/doc/my-doc/changes/654)
+
+> _Powered by [Bump.sh](https://bump.sh)_
+<!-- Bump.sh digest=${digest} doc=hello -->`,
+      digest,
+    );
+  });
+
+  test('test github diff with no structural change', async () => {
+    const result: bump.DiffResponse = {
+      id: '123abc',
+      public_url: 'https://bump.sh/doc/my-doc/changes/654',
+      breaking: false,
+    };
+    const digest = '3999a0fe6ad27841bd6342128f7028ab2cea1c57';
+
+    const repo = new Repo('hello');
+    await diff.run(result, repo);
+
+    expect(repo.createOrUpdateComment).toHaveBeenCalledWith(
+      `ℹ️ API content change detected:
+
+No structural change, nothing to display.
+
+[Preview documentation](https://bump.sh/doc/my-doc/changes/654)
+
+> _Powered by [Bump.sh](https://bump.sh)_
+<!-- Bump.sh digest=${digest} doc=hello -->`,
+      digest,
+    );
+  });
+
+  test('test github diff with breaking changes', async () => {
+    const result: bump.DiffResponse = {
+      id: '123abc',
+      markdown: `* one
+* two
+* three
+`,
+      public_url: 'https://bump.sh/doc/my-doc/changes/654',
+      breaking: true,
+    };
+    const digest = '4b81e612cafa6580f8ad3bfe9e970b2d961f58c2';
+    const repo = new Repo('hello');
+    await diff.run(result, repo);
+
+    expect(repo.createOrUpdateComment).toHaveBeenCalledWith(
+      `🚨 Breaking API change detected:
+
+* one
+* two
+* three
+
+
+[Preview documentation](https://bump.sh/doc/my-doc/changes/654)
+
+> _Powered by [Bump.sh](https://bump.sh)_
+<!-- Bump.sh digest=${digest} doc=hello -->`,
+      digest,
+    );
+  });
+
+  test('test github diff without public url', async () => {
+    const result: bump.DiffResponse = {
+      id: '123abc',
+      markdown: `* one
+* two
+* three
+`,
+      breaking: false,
+    };
+    const digest = 'c1f04e5c83235377b88745d13dc9b1ebd3a125a8';
+
+    const repo = new Repo('hello');
+    await diff.run(result, repo);
+
+    expect(repo.createOrUpdateComment).toHaveBeenCalledWith(
+      `🤖 API structural change detected:
+
+* one
+* two
+* three
+
+
+> _Powered by [Bump.sh](https://bump.sh)_
+<!-- Bump.sh digest=${digest} doc=hello -->`,
+      digest,
+    );
+  });
+});
