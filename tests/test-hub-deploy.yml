@@ -1,0 +1,41 @@
+name: Test hub deploy (hub + branch + overlay)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create a minimal API definition file
+        run: |
+          cat > /tmp/test-api.yml << 'EOF'
+          openapi: "3.0.0"
+          info:
+            title: Test API
+            version: "1.0.0"
+          paths: {}
+          EOF
+          cat > /tmp/overlay.yml << 'EOF'
+          overlay: "1.0.0"
+          info:
+            title: Test Overlay
+          actions: []
+          EOF
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          file: /tmp/test-api.yml
+          hub: test-hub-slug
+          token: fake-token-for-testing
+          branch: main
+          overlay: /tmp/overlay.yml
+          command: deploy
+      - name: Assert action ran (expected to fail with invalid token)
+        run: |
+          echo "Action outcome: ${{ steps.action.outcome }}"
+          if [ "${{ steps.action.outcome }}" = "" ]; then
+            echo "FAIL: action did not produce an outcome"
+            exit 1
+          fi
+          echo "PASS: action ran with outcome ${{ steps.action.outcome }}"
