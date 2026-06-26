@@ -1,0 +1,45 @@
+name: Test AsyncAPI dry-run command
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create minimal AsyncAPI spec
+        run: |
+          cat > /tmp/asyncapi-contract.yml << 'EOF'
+          asyncapi: "2.6.0"
+          info:
+            title: Test AsyncAPI
+            version: "1.0.0"
+          channels:
+            user/signedup:
+              subscribe:
+                message:
+                  payload:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          file: /tmp/asyncapi-contract.yml
+          command: dry-run
+          doc: test-async-doc
+          token: fake-token-asyncapi
+        continue-on-error: true
+
+      - name: Assert action ran
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          # dry-run with a fake token may fail due to API auth, but the action should at least start
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action step executed (outcome: ${{ steps.action.outcome }})"

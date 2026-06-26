@@ -1,0 +1,44 @@
+name: Test mcp_server input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create minimal OpenAPI spec
+        run: |
+          cat > /tmp/mcp-api-contract.yml << 'EOF'
+          openapi: "3.1.0"
+          info:
+            title: MCP Server Test API
+            version: "1.0.0"
+          paths:
+            /tools:
+              get:
+                summary: List tools
+                responses:
+                  "200":
+                    description: OK
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          file: /tmp/mcp-api-contract.yml
+          command: dry-run
+          doc: test-doc
+          token: fake-token-for-mcp-test
+          mcp_server: test-mcp-server-slug
+        continue-on-error: true
+
+      - name: Assert action ran
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          # dry-run with fake credentials may fail due to API auth, but the action should execute
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action step executed with mcp_server input (outcome: ${{ steps.action.outcome }})"

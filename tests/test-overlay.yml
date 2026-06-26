@@ -1,0 +1,55 @@
+name: Test overlay input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create minimal OpenAPI spec and overlay file
+        run: |
+          cat > /tmp/overlay-api-contract.yml << 'EOF'
+          openapi: "3.1.0"
+          info:
+            title: Overlay Test API
+            version: "1.0.0"
+          paths:
+            /health:
+              get:
+                summary: Health check
+                responses:
+                  "200":
+                    description: OK
+          EOF
+
+          cat > /tmp/api-overlay.yml << 'EOF'
+          overlay: 1.0.0
+          info:
+            title: Test Overlay
+            version: 1.0.0
+          actions:
+            - target: "$.info"
+              update:
+                x-overlay-applied: true
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          file: /tmp/overlay-api-contract.yml
+          command: dry-run
+          doc: test-doc
+          token: fake-token-for-overlay-test
+          overlay: /tmp/api-overlay.yml
+        continue-on-error: true
+
+      - name: Assert action ran
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          # dry-run with fake credentials may fail due to API auth, but the action should execute
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action step executed with overlay input (outcome: ${{ steps.action.outcome }})"

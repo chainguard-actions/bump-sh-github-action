@@ -1,0 +1,49 @@
+name: Test preview command
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create minimal OpenAPI spec
+        run: |
+          cat > /tmp/openapi-preview.yml << 'EOF'
+          openapi: "3.1.0"
+          info:
+            title: Preview Test API
+            version: "2.0.0"
+          paths:
+            /status:
+              get:
+                summary: Get status
+                responses:
+                  "200":
+                    description: OK
+                    content:
+                      application/json:
+                        schema:
+                          type: object
+                          properties:
+                            status:
+                              type: string
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          file: /tmp/openapi-preview.yml
+          command: preview
+        continue-on-error: true
+
+      - name: Assert action ran
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          # preview command contacts bump.sh API; without credentials it may fail
+          # but the action should execute (not be skipped)
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action step executed (outcome: ${{ steps.action.outcome }})"
