@@ -1,0 +1,45 @@
+name: Test expires input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create minimal OpenAPI definition file
+        run: |
+          cat > /tmp/api-contract.yml << 'EOF'
+          openapi: "3.1.0"
+          info:
+            title: Test API
+            version: "1.0.0"
+          paths:
+            /hello:
+              get:
+                summary: Say hello
+                responses:
+                  "200":
+                    description: A greeting
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          file: /tmp/api-contract.yml
+          command: diff
+          doc: test-doc
+          token: fake-token-for-test
+          expires: never
+        continue-on-error: true
+
+      - name: Assert action ran with expires input
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          # The action will fail at the API call with a fake token,
+          # but the step should not be skipped — it should be executed
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action step was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action step was executed with expires input (outcome: ${{ steps.action.outcome }})"

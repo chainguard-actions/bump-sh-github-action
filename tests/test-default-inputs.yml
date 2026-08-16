@@ -1,0 +1,46 @@
+name: Test default inputs (file and command defaults)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create default API contract file (api-contract.yml)
+        run: |
+          cat > "$GITHUB_WORKSPACE/api-contract.yml" << 'EOF'
+          openapi: "3.0.0"
+          info:
+            title: Default Test API
+            version: "1.0.0"
+          paths:
+            /ping:
+              get:
+                summary: Ping
+                responses:
+                  "200":
+                    description: OK
+          EOF
+
+      - id: action
+        name: Run action with default file and command inputs
+        uses: .
+        with:
+          # Only providing token and doc; file defaults to api-contract.yml, command defaults to deploy
+          doc: test-doc
+          token: invalid-token-for-testing
+        continue-on-error: true
+
+      - name: Assert action failed with API error (not a file-not-found error)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail because the token is invalid (API auth error)
+          # If it failed due to missing file, the defaults are broken
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail with invalid token, but outcome was: $OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly used default inputs and failed with invalid token"

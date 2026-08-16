@@ -1,0 +1,19 @@
+openapi: "3.0.0"
+info:
+  title: Test API
+  version: "1.0.0"
+  description: A minimal OpenAPI spec for testing
+paths:
+  /hello:
+    get:
+      summary: Say hello
+      responses:
+        "200":
+          description: A greeting
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
