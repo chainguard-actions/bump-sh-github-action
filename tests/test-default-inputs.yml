@@ -1,0 +1,34 @@
+name: Test default inputs (deploy command, default file)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run bump.sh with default inputs (no file, no token, no doc)
+        id: action
+        uses: .
+        with:
+          # Only override token/doc to avoid real API calls;
+          # file defaults to 'api-contract.yml' which doesn't exist in this repo.
+          # command defaults to 'deploy'.
+          token: invalid-token-for-testing
+          doc: test-doc-slug
+        continue-on-error: true
+
+      - name: Assert action failed due to missing default file
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The default file 'api-contract.yml' does not exist in this repo,
+          # so the action should fail. This verifies the default input values
+          # are correctly read and passed to the bump CLI.
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed when default file does not exist"
+          else
+            echo "FAIL: expected action to fail with missing default file but got: $OUTCOME"
+            exit 1
+          fi

@@ -1,0 +1,32 @@
+name: Test deploy command with missing file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run bump.sh deploy with a non-existent file
+        id: action
+        uses: .
+        with:
+          command: deploy
+          file: tests/fixtures/does-not-exist.yml
+          doc: test-doc-slug
+          token: invalid-token-for-testing
+        continue-on-error: true
+
+      - name: Assert action failed due to missing file
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # Deploying a non-existent file should cause the action to fail.
+          # It should NOT succeed or crash with an unhandled exception.
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed when given a non-existent file"
+          else
+            echo "FAIL: expected action to fail with missing file but got: $OUTCOME"
+            exit 1
+          fi

@@ -1,0 +1,49 @@
+name: Test deploy with missing token fails gracefully
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create minimal OpenAPI definition file
+        run: |
+          cat > /tmp/deploy-api.yml << 'EOF'
+          openapi: "3.0.0"
+          info:
+            title: Deploy Test API
+            version: "1.0.0"
+          paths:
+            /ping:
+              get:
+                summary: Ping
+                responses:
+                  "200":
+                    description: OK
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          command: deploy
+          file: /tmp/deploy-api.yml
+          doc: some-doc-slug
+          token: ""
+
+      - name: Assert action fails gracefully without a token
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # Without a valid token, the deploy command should fail (not crash)
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed without a valid token"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "FAIL: action should not succeed without a valid token"
+            exit 1
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi

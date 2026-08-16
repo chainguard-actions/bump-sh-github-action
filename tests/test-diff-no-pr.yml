@@ -1,0 +1,34 @@
+name: Test diff command outside pull request context
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run bump.sh diff command (no PR context, invalid token)
+        id: action
+        uses: .
+        with:
+          command: diff
+          file: tests/fixtures/openapi.yml
+          doc: test-doc-slug
+          token: invalid-token-for-testing
+        continue-on-error: true
+
+      - name: Assert action ran and failed with expected error
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The diff command with an invalid token should fail with an API error.
+          # Under workflow_dispatch (not a PR), the action will attempt to call
+          # the Bump.sh API and fail due to the invalid token.
+          # It should NOT crash with an unhandled exception.
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: diff command correctly failed with invalid token (expected)"
+          else
+            echo "FAIL: expected action to fail with invalid token but got: $OUTCOME"
+            exit 1
+          fi
