@@ -1,4 +1,4 @@
-name: Test diff with expires input
+name: Test deploy with overlay input
 on:
   workflow_dispatch:
 jobs:
@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Create API definition file
+      - name: Create API definition file and overlay file
         run: |
           cat > /tmp/api-contract.yml << 'EOF'
           openapi: "3.0.0"
@@ -21,17 +21,24 @@ jobs:
                   "200":
                     description: OK
           EOF
+          cat > /tmp/overlay.yml << 'EOF'
+          overlay: "1.0.0"
+          info:
+            title: Test Overlay
+            version: "1.0.0"
+          actions: []
+          EOF
       - id: action
         uses: .
         continue-on-error: true
         with:
-          command: diff
+          command: dry-run
           file: /tmp/api-contract.yml
           doc: test-doc
           token: fake-token-for-testing
-          expires: "2099-12-31T23:59:59Z"
-      - name: Assert action ran with expires input
+          overlay: /tmp/overlay.yml
+      - name: Assert action ran with overlay input
         run: |
-          echo "Action completed (may fail due to invalid token, but expires input was passed)"
+          echo "Action completed (may fail due to invalid token, but overlay input was passed)"
           echo "outcome: ${{ steps.action.outcome }}"
-          echo "PASS: expires input was accepted by the action"
+          echo "PASS: overlay input was accepted by the action"

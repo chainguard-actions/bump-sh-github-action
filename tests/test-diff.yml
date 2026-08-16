@@ -1,8 +1,8 @@
-name: Test dry-run command
+name: Test diff command
 on:
   workflow_dispatch:
 jobs:
-  test-dry-run:
+  test-diff:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -14,18 +14,18 @@ jobs:
       - id: action
         uses: .
         with:
-          command: dry-run
+          command: diff
           file: api-contract.yml
           doc: test-doc-slug
           token: fake-bump-token-for-testing
         continue-on-error: true
 
-      - name: Assert action ran (dry-run command attempted)
+      - name: Assert action ran (diff command attempted)
         env:
           OUTCOME: ${{ steps.action.outcome }}
         run: |
           echo "outcome: $OUTCOME"
-          # The action should either succeed or fail with an API error.
+          # The action should either succeed or fail with an API error (invalid token).
           # We accept both outcomes — the important thing is the action ran.
           if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
             echo "PASS: action ran and produced an outcome: $OUTCOME"
