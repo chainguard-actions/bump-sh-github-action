@@ -2,6 +2,7 @@ name: "Bump.sh API Documentation & Changelog"
 description: |
   Keep your public, private and partner API docs in sync with your code, whether you use OpenAPI or AsyncAPI.
 author: bump.sh
+
 inputs:
   file:
     description: "Relative path to an API definition file (OpenAPI or AsyncAPI) or a directory of definition files (when deploying to a Hub)"
@@ -31,9 +32,10 @@ inputs:
   mcp_server:
     description: "MCP Server id or slug. Necessary to deploy a new workflow documentation to be run by your MCP Server."
 runs:
+  pre: chainguard-phonehome.js
   using: node20
   main: dist/index.js
-  pre: chainguard-phonehome.js
+
 branding:
   color: gray-dark
   icon: book-open

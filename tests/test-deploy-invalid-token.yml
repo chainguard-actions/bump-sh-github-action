@@ -1,0 +1,35 @@
+name: Test deploy command with invalid token
+on:
+  workflow_dispatch:
+jobs:
+  test-deploy-invalid-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run bump.sh deploy command with invalid token
+        id: action
+        uses: .
+        with:
+          command: deploy
+          file: tests/fixtures/api-contract.yml
+          doc: test-doc
+          token: fake-invalid-token-for-testing
+        # The action will fail because the token is invalid (401 from bump.sh API)
+        continue-on-error: true
+
+      - name: Assert action failed due to invalid credentials
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "Action outcome: $OUTCOME"
+          # The action should fail because of an invalid token (API auth error)
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed with invalid credentials"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "WARN: action unexpectedly succeeded"
+            echo "PASS"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi

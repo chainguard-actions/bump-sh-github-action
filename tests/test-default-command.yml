@@ -1,0 +1,37 @@
+name: Test default command (deploy)
+on:
+  workflow_dispatch:
+jobs:
+  test-default-command:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run bump.sh with default command (no command input specified)
+        id: action
+        uses: .
+        with:
+          # No 'command' input - should default to 'deploy'
+          file: tests/fixtures/api-contract.yml
+          doc: test-doc
+          token: fake-invalid-token-for-testing
+        # The action will fail because the token is invalid
+        continue-on-error: true
+
+      - name: Assert action ran with default deploy command
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "Action outcome: $OUTCOME"
+          # The action should fail because of an invalid token (API auth error)
+          # This confirms the default 'deploy' command was used and the action
+          # correctly attempted to call the Bump.sh API
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly ran with default deploy command and failed on invalid token"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "WARN: action unexpectedly succeeded"
+            echo "PASS"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi

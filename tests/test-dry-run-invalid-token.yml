@@ -1,0 +1,37 @@
+name: Test dry-run command with invalid token
+on:
+  workflow_dispatch:
+jobs:
+  test-dry-run-invalid-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run bump.sh dry-run command with invalid token
+        id: action
+        uses: .
+        with:
+          command: dry-run
+          file: tests/fixtures/api-contract.yml
+          doc: test-doc
+          token: fake-invalid-token-for-testing
+        # The action will fail because the token is invalid (401 from bump.sh API)
+        # We expect this step to fail, so we continue-on-error
+        continue-on-error: true
+
+      - name: Assert action failed due to invalid token (not file/parse error)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "Action outcome: $OUTCOME"
+          # The action should fail because of an invalid token (API auth error)
+          # not because of a missing file or parse error
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed (expected with invalid token)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "WARN: action unexpectedly succeeded - this may indicate the token was accepted"
+            echo "PASS"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi

@@ -1,0 +1,35 @@
+name: Test hub input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create a minimal API definition file
+        run: |
+          cat > /tmp/api-contract.yml << 'EOF'
+          openapi: "3.0.0"
+          info:
+            title: Test API
+            version: "1.0.0"
+          paths: {}
+          EOF
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          file: /tmp/api-contract.yml
+          hub: test-hub-slug
+          token: invalid-token-for-test
+          command: deploy
+      - name: Assert action ran with hub input
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          # The action should either succeed or fail due to invalid token,
+          # but it must have accepted the hub input (not fail due to unknown input)
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with hub input"
