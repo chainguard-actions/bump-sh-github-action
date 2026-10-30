@@ -14,6 +14,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v1.2.7 | [`v1.2.7`](https://github.com/chainguard-actions/bump-sh-github-action/tree/v1.2.7) | [`31a112a`](https://github.com/bump-sh/github-action/commit/31a112af30a57a1a99b2ba9717522cccab1015a0) | [`HARDENING.md`](https://github.com/chainguard-actions/bump-sh-github-action/blob/v1.2.7/HARDENING.md) |
 | v1.3.0 | [`v1.3.0`](https://github.com/chainguard-actions/bump-sh-github-action/tree/v1.3.0) | [`6aff793`](https://github.com/bump-sh/github-action/commit/6aff793a699f2e3269de3124a7a3eb46e5ffb261) | [`HARDENING.md`](https://github.com/chainguard-actions/bump-sh-github-action/blob/v1.3.0/HARDENING.md) |
 | v1.3.1 | [`v1.3.1`](https://github.com/chainguard-actions/bump-sh-github-action/tree/v1.3.1) | [`3cfa028`](https://github.com/bump-sh/github-action/commit/3cfa0288007867bad2515ca467cc01d8291a3301) | [`HARDENING.md`](https://github.com/chainguard-actions/bump-sh-github-action/blob/v1.3.1/HARDENING.md) |
+| v1.4.0 | [`v1.4.0`](https://github.com/chainguard-actions/bump-sh-github-action/tree/v1.4.0) | [`d0ed23a`](https://github.com/bump-sh/github-action/commit/d0ed23a6da98160b655aa5588c7f3677c074c926) | [`HARDENING.md`](https://github.com/chainguard-actions/bump-sh-github-action/blob/v1.4.0/HARDENING.md) |
 
 ## Privacy
 
