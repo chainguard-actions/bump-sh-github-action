@@ -1,0 +1,27 @@
+name: Test preview command
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Assert fixture exists
+        run: |
+          test -f tests/fixtures/openapi.yml || { echo "FAIL: fixture missing"; exit 1; }
+          echo "PASS"
+      - id: action
+        uses: .
+        with:
+          file: tests/fixtures/openapi.yml
+          command: preview
+      - name: Assert preview succeeded
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected success"
+            exit 1
+          fi
+          echo "PASS"
