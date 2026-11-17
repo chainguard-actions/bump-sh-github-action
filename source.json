@@ -4,8 +4,13 @@
   "version": "v1.3.0",
   "commit_sha": "6aff793a699f2e3269de3124a7a3eb46e5ffb261",
   "url": "https://github.com/bump-sh/github-action",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
-  "harden_agent_version": "2"
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/bump-sh/github-action/v1.3.0/sha256-59a12eb3f53e3b5456b7cc4a3940c8b783744fd056a75b97252b489f60fe159e.tar.gz",
+    "sha256": "59a12eb3f53e3b5456b7cc4a3940c8b783744fd056a75b97252b489f60fe159e",
+    "size_bytes": 6837482
+  }
 }
